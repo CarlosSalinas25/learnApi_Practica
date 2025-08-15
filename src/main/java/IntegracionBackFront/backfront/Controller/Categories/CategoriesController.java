@@ -1,19 +1,20 @@
 package IntegracionBackFront.backfront.Controller.Categories;
 
+import IntegracionBackFront.backfront.Exceptions.Category.ExceptionCategoryNotFound;
 import IntegracionBackFront.backfront.Models.DTO.Categories.CategoryDTO;
 import IntegracionBackFront.backfront.Services.Categories.CategoryService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/category")
+@CrossOrigin(origins = "*")
 public class CategoriesController {
 
     //Inyectar la clase service
@@ -45,5 +46,38 @@ public class CategoriesController {
             ));
         }
         return ResponseEntity.ok(category);
+    }
+
+    @PostMapping("/InsertCategory")
+    public ResponseEntity<CategoryDTO> createCategory(@Valid @RequestBody CategoryDTO categoryDTO) {
+        try {
+            CategoryDTO created = service.insert(categoryDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/updatedCategory/{id}")
+    public ResponseEntity<CategoryDTO> updateCategory(@PathVariable Long id,
+                                                      @Valid @RequestBody CategoryDTO categoryDTO) {
+        try {
+            CategoryDTO updated = service.update(id, categoryDTO);
+            return ResponseEntity.ok(updated);
+        } catch (ExceptionCategoryNotFound e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping("/DeleteCategory/{id}")
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
+        boolean deleted = service.delete(id);
+        if (deleted) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 }
